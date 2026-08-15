@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>我的主页</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --accent: #4a9eff;
+            --accent-hover: #3a8eef;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+            position: relative;
+        }
+
+        /* 背景层 */
+        #bg-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.2s ease;
+        }
+
+        #bg-layer.next {
+            z-index: -1;
+            opacity: 0;
+        }
+
+        #bg-layer.active {
+            opacity: 1;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.4) 100%);
+            z-index: -1;
+        }
+
+        /* 顶部栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 28px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-grid-btn {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .app-grid-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        .app-grid-btn svg {
+            width: 20px; height: 20px;
+            fill: white;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .weather-widget {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .weather-widget:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .weather-icon {
+            font-size: 20px;
+        }
+
+        .weather-temp {
+            font-weight: 500;
+        }
+
+        .weather-city {
+            opacity: 0.8;
+            font-size: 12px;
+        }
+
+        .top-icon-btn {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .top-icon-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.05);
+        }
+
+        .top-icon-btn svg {
+            width: 20px; height: 20px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 80px);
+            padding: 0 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* 时间 */
+        .time-display {
+            font-size: 72px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin-bottom: 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .date-display {
+            font-size: 18px;
+            opacity: 0.85;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* 搜索框 */
+        .search-container {
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            margin-bottom: 50px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 32px;
+            padding: 4px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .search-box:focus-within {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .search-engine-select {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 14px 0 18px;
+            cursor: pointer;
+            border-right: 1px solid rgba(0,0,0,0.1);
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            user-select: none;
+            position: relative;
+        }
+
+        .search-engine-select:hover {
+            color: var(--accent);
+        }
+
+        .engine-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            padding: 8px 0;
+            min-width: 120px;
+            display: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .engine-dropdown.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .engine-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .engine-option:hover {
+            background: #f0f0f0;
+        }
+
+        .engine-option.active {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 16px;
+            font-size: 16px;
+            color: #333;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .search-input::placeholder {
+            color: #999;
+        }
+
+        .search-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .search-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .search-btn svg {
+            width: 20px; height: 20px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* 快捷方式 */
+        .shortcuts-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 900px;
+            padding: 0 20px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            width: 80px;
+        }
+
+        .shortcut-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .shortcut-item:hover .shortcut-icon {
+            background: rgba(255,255,255,0.35);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .shortcut-icon {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .shortcut-icon img {
+            width: 28px; height: 28px;
+            object-fit: contain;
+        }
+
+        .shortcut-name {
+            font-size: 12px;
+            opacity: 0.9;
+            text-align: center;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .shortcut-delete {
+            position: absolute;
+            top: -6px; right: 8px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: rgba(255,80,80,0.9);
+            color: white;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .shortcut-item:hover .shortcut-delete {
+            opacity: 1;
+        }
+
+        .shortcut-delete:hover {
+            background: rgba(255,50,50,1);
+            transform: scale(1.1);
+        }
+
+        .add-shortcut {
+            border: 2px dashed rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .add-shortcut:hover {
+            border-color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed;
+            top: 0; right: -400px;
+            width: 380px; height: 100vh;
+            background: rgba(30, 30, 40, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.3);
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .settings-title {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .settings-close {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+
+        .settings-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 12px;
+        }
+
+        .setting-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-item-text {
+            font-size: 15px;
+        }
+
+        .setting-item-desc {
+            font-size: 12px;
+            opacity: 0.5;
+            margin-top: 2px;
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            width: 48px; height: 26px;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.2);
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle.active {
+            background: var(--accent);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: white;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle.active::after {
+            transform: translateX(22px);
+        }
+
+        .text-input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: white;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .text-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .bg-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .bg-option {
+            aspect-ratio: 16/10;
+            border-radius: 8px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .bg-option:hover {
+            transform: scale(1.05);
+        }
+
+        .bg-option.active {
+            border-color: var(--accent);
+        }
+
+        /* 遮罩 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* 添加快捷方式弹窗 */
+        .modal {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: rgba(40, 40, 50, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .modal-input-group {
+            margin-bottom: 16px;
+        }
+
+        .modal-input-group label {
+            display: block;
+            font-size: 13px;
+            opacity: 0.7;
+            margin-bottom: 6px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* 应用抽屉 */
+        .app-drawer {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: rgba(30, 30, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 100;
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            min-width: 280px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .app-drawer.show {
+            display: grid;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .app-drawer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .app-drawer-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .app-drawer-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .app-drawer-name {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .time-display { font-size: 52px; }
+            .shortcuts-container { gap: 14px; }
+            .shortcut-item { width: 68px; }
+            .shortcut-icon { width: 48px; height: 48px; }
+            .settings-panel { width: 100%; right: -100%; }
+            .top-bar { padding: 12px 16px; }
+            .weather-widget { padding: 6px 12px; font-size: 13px; }
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <!-- 背景 -->
+    <div id="bg-layer" class="active"></div>
+    <div id="bg-layer-next" class="next"></div>
+    <div class="bg-overlay"></div>
+
+    <!-- 顶部栏 -->
+    <div class="top-bar">
+        <div class="top-left">
+            <div class="app-grid-btn" id="appGridBtn" title="应用">
+                <svg viewBox="0 0 24 24"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg>
+            </div>
+        </div>
+        <div class="top-right">
+            <div class="weather-widget" id="weatherWidget" title="点击刷新天气">
+                <span class="weather-icon" id="weatherIcon">🌤️</span>
+                <span class="weather-temp" id="weatherTemp">--°</span>
+                <span class="weather-city" id="weatherCity">加载中...</span>
+            </div>
+            <div class="top-icon-btn" id="editBtn" title="编辑快捷方式">
+                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="top-icon-btn" id="settingsBtn" title="设置">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 应用抽屉 -->
+    <div class="app-drawer" id="appDrawer">
+        <div class="app-drawer-item" onclick="window.open('https://www.bilibili.com','_blank')">
+            <div class="app-drawer-icon">📺</div>
+            <div class="app-drawer-name">B站</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://github.com','_blank')">
+            <div class="app-drawer-icon">🐙</div>
+            <div class="app-drawer-name">GitHub</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://www.zhihu.com','_blank')">
+            <div class="app-drawer-icon">📚</div>
+            <div class="app-drawer-name">知乎</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://www.youtube.com','_blank')">
+            <div class="app-drawer-icon">▶️</div>
+            <div class="app-drawer-name">YouTube</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://translate.google.com','_blank')">
+            <div class="app-drawer-icon">🌐</div>
+            <div class="app-drawer-name">翻译</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://www.notion.so','_blank')">
+            <div class="app-drawer-icon">📝</div>
+            <div class="app-drawer-name">Notion</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://www.figma.com','_blank')">
+            <div class="app-drawer-icon">🎨</div>
+            <div class="app-drawer-name">Figma</div>
+        </div>
+        <div class="app-drawer-item" onclick="window.open('https://mail.google.com','_blank')">
+            <div class="app-drawer-icon">✉️</div>
+            <div class="app-drawer-name">Gmail</div>
+        </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+        <div class="time-display" id="timeDisplay">00:00</div>
+        <div class="date-display" id="dateDisplay">加载中...</div>
+
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-engine-select" id="engineSelect">
+                    <span id="currentEngine">百度</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+                    <div class="engine-dropdown" id="engineDropdown">
+                        <div class="engine-option active" data-engine="baidu" data-url="https://www.baidu.com/s?wd=">百度</div>
+                        <div class="engine-option" data-engine="google" data-url="https://www.google.com/search?q=">Google</div>
+                        <div class="engine-option" data-engine="bing" data-url="https://www.bing.com/search?q=">Bing</div>
+                        <div class="engine-option" data-engine="duckduckgo" data-url="https://duckduckgo.com/?q=">DuckDuckGo</div>
+                        <div class="engine-option" data-engine="sogou" data-url="https://www.sogou.com/web?query=">搜狗</div>
+                    </div>
+                </div>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索网页" autocomplete="off">
+                <button class="search-btn" id="searchBtn">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 快捷方式 -->
+        <div class="shortcuts-container" id="shortcutsContainer"></div>
+    </div>
+
+    <!-- 遮罩 -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <div class="settings-title">⚙️ 设置</div>
+            <button class="settings-close" id="settingsClose">×</button>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-label">背景</div>
+            <div class="bg-options" id="bgOptions"></div>
+            <div style="margin-top:12px;">
+                <input type="text" class="text-input" id="customBgUrl" placeholder="输入自定义图片 URL">
+                <button class="btn-primary" style="margin-top:8px;width:100%;" id="applyCustomBg">应用自定义背景</button>
+            </div>
+            <div class="setting-item" style="margin-top:12px;">
+                <div>
+                    <div class="setting-item-text">自动切换背景</div>
+                    <div class="setting-item-desc">每 30 秒切换一次</div>
+                </div>
+                <div class="toggle" id="autoBgToggle"></div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-label">天气</div>
+            <div class="setting-item">
+                <div class="setting-item-text">城市</div>
+                <input type="text" class="text-input" id="cityInput" placeholder="如：北京" style="width:120px;text-align:right;">
+            </div>
+            <button class="btn-primary" style="width:100%;" id="saveCityBtn">保存城市</button>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-label">搜索</div>
+            <div class="setting-item">
+                <div>
+                    <div class="setting-item-text">默认搜索引擎</div>
+                </div>
+                <select class="text-input" id="defaultEngineSelect" style="width:120px;">
+                    <option value="baidu">百度</option>
+                    <option value="google">Google</option>
+                    <option value="bing">Bing</option>
+                    <option value="duckduckgo">DuckDuckGo</option>
+                    <option value="sogou">搜狗</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="setting-label">数据</div>
+            <button class="btn-primary" style="width:100%;background:rgba(255,80,80,0.8);" id="resetBtn">重置所有设置</button>
+        </div>
+    </div>
+
+    <!-- 添加快捷方式弹窗 -->
+    <div class="modal" id="addModal">
+        <div class="modal-title">➕ 添加快捷方式</div>
+        <div class="modal-input-group">
+            <label>名称</label>
+            <input type="text" class="text-input" id="modalName" placeholder="如：B站">
+        </div>
+        <div class="modal-input-group">
+            <label>网址</label>
+            <input type="text" class="text-input" id="modalUrl" placeholder="如：https://www.bilibili.com">
+        </div>
+        <div class="modal-input-group">
+            <label>图标（可选，输入 emoji 或图片 URL）</label>
+            <input type="text" class="text-input" id="modalIcon" placeholder="如：📺 或 https://...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" id="modalCancel">取消</button>
+            <button class="btn-primary" id="modalConfirm">添加</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ========== 默认数据 ==========
+        const DEFAULT_SHORTCUTS = [
+            { name: 'b站', url: 'https://www.bilibili.com', icon: '📺' },
+            { name: '玻尔', url: 'https://bohrium.dp.tech', icon: '⚛️' },
+            { name: 'Kimi', url: 'https://kimi.moonshot.cn', icon: '🌙' },
+            { name: 'deepseek', url: 'https://chat.deepseek.com', icon: '🐋' },
+            { name: '力扣', url: 'https://leetcode.cn', icon: '💻' },
+            { name: '华为云', url: 'https://www.huaweicloud.com', icon: '☁️' },
+            { name: 'CR', url: 'https://www.crossref.org', icon: '📑' },
+            { name: 'mooc', url: 'https://www.icourse163.org', icon: '🎓' },
+        ];
+
+        const BG_IMAGES = [
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80',
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=80',
+            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920&q=80',
+            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80',
+            'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1920&q=80',
+            'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1920&q=80',
+        ];
+
+        const WEATHER_CODES = {
+            0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 48: '🌫️',
+            51: '🌦️', 53: '🌧️', 55: '🌧️', 61: '🌧️', 63: '🌧️', 65: '🌧️',
+            71: '🌨️', 73: '🌨️', 75: '🌨️', 77: '🌨️', 80: '🌦️', 81: '🌧️', 82: '🌧️',
+            85: '🌨️', 86: '🌨️', 95: '⛈️', 96: '⛈️', 99: '⛈️'
+        };
+
+        // ========== 状态管理 ==========
+        let state = {
+            shortcuts: [],
+            bgIndex: 0,
+            autoBg: false,
+            engine: 'baidu',
+            city: '北京',
+            editMode: false
+        };
+
+        // ========== 工具函数 ==========
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('startpage_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                }
+            } catch(e) {}
+            if (!state.shortcuts || state.shortcuts.length === 0) {
+                state.shortcuts = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('startpage_state', JSON.stringify(state));
+        }
+
+        function getFavicon(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            } catch {
+                return '';
+            }
+        }
+
+        function isUrl(str) {
+            return /^https?:\/\//.test(str);
+        }
+
+        // ========== 背景 ==========
+        function setBg(url, isNext = false) {
+            const el = isNext ? document.getElementById('bg-layer-next') : document.getElementById('bg-layer');
+            const img = new Image();
+            img.onload = () => {
+                el.style.backgroundImage = `url(${url})`;
+                if (isNext) {
+                    el.style.opacity = '1';
+                    setTimeout(() => {
+                        document.getElementById('bg-layer').style.backgroundImage = `url(${url})`;
+                        el.style.opacity = '0';
+                    }, 1200);
+                }
+            };
+            img.src = url;
+        }
+
+        function initBg() {
+            const url = state.customBg || BG_IMAGES[state.bgIndex % BG_IMAGES.length];
+            setBg(url);
+            renderBgOptions();
+        }
+
+        function renderBgOptions() {
+            const container = document.getElementById('bgOptions');
+            container.innerHTML = BG_IMAGES.map((url, i) => 
+                `<div class="bg-option ${i === state.bgIndex && !state.customBg ? 'active' : ''}" 
+                     style="background-image:url(${url})" data-index="${i}"></div>`
+            ).join('');
+
+            container.querySelectorAll('.bg-option').forEach(el => {
+                el.addEventListener('click', () => {
+                    state.bgIndex = parseInt(el.dataset.index);
+                    state.customBg = null;
+                    saveState();
+                    setBg(BG_IMAGES[state.bgIndex]);
+                    renderBgOptions();
+                });
+            });
+        }
+
+        let bgInterval = null;
+        function toggleAutoBg(enabled) {
+            state.autoBg = enabled;
+            document.getElementById('autoBgToggle').classList.toggle('active', enabled);
+            saveState();
+            if (bgInterval) clearInterval(bgInterval);
+            if (enabled) {
+                bgInterval = setInterval(() => {
+                    state.bgIndex = (state.bgIndex + 1) % BG_IMAGES.length;
+                    state.customBg = null;
+                    saveState();
+                    setBg(BG_IMAGES[state.bgIndex], true);
+                    renderBgOptions();
+                }, 30000);
+            }
+        }
+
+        // ========== 时间 ==========
+        function updateTime() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('timeDisplay').textContent = `${h}:${m}`;
+
+            const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+            const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${weekdays[now.getDay()]}`;
+            document.getElementById('dateDisplay').textContent = dateStr;
+        }
+
+        // ========== 天气 ==========
+        async function fetchWeather() {
+            const city = state.city || '北京';
+            document.getElementById('weatherCity').textContent = city;
+            document.getElementById('weatherIcon').textContent = '⏳';
+
+            try {
+                // 先获取城市坐标
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh&format=json`);
+                const geoData = await geoRes.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    throw new Error('城市未找到');
+                }
+
+                const { latitude, longitude } = geoData.results[0];
+
+                // 获取天气
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&timezone=auto`);
+                const weatherData = await weatherRes.json();
+
+                const temp = Math.round(weatherData.current.temperature_2m);
+                const code = weatherData.current.weather_code;
+                const icon = WEATHER_CODES[code] || '🌡️';
+
+                document.getElementById('weatherTemp').textContent = `${temp}°C`;
+                document.getElementById('weatherIcon').textContent = icon;
+            } catch (err) {
+                document.getElementById('weatherTemp').textContent = '--°';
+                document.getElementById('weatherIcon').textContent = '❓';
+                document.getElementById('weatherCity').textContent = city;
+            }
+        }
+
+        // ========== 搜索 ==========
+        const ENGINES = {
+            baidu: 'https://www.baidu.com/s?wd=',
+            google: 'https://www.google.com/search?q=',
+            bing: 'https://www.bing.com/search?q=',
+            duckduckgo: 'https://duckduckgo.com/?q=',
+            sogou: 'https://www.sogou.com/web?query='
+        };
+
+        function doSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            const url = ENGINES[state.engine] + encodeURIComponent(query);
+            window.open(url, '_blank');
+            document.getElementById('searchInput').value = '';
+        }
+
+        function setEngine(engine) {
+            state.engine = engine;
+            const names = { baidu: '百度', google: 'Google', bing: 'Bing', duckduckgo: 'DuckDuckGo', sogou: '搜狗' };
+            document.getElementById('currentEngine').textContent = names[engine];
+            document.querySelectorAll('.engine-option').forEach(el => {
+                el.classList.toggle('active', el.dataset.engine === engine);
+            });
+            document.getElementById('defaultEngineSelect').value = engine;
+            saveState();
+        }
+
+        // ========== 快捷方式 ==========
+        function renderShortcuts() {
+            const container = document.getElementById('shortcutsContainer');
+            let html = state.shortcuts.map((s, i) => {
+                const iconHtml = s.icon && !isUrl(s.icon) 
+                    ? s.icon 
+                    : `<img src="${s.icon || getFavicon(s.url)}" alt="" onerror="this.parentElement.innerHTML='🔗';this.onerror=null;">`;
+                const deleteBtn = state.editMode 
+                    ? `<button class="shortcut-delete" data-index="${i}" onclick="event.stopPropagation();deleteShortcut(${i})">×</button>` 
+                    : '';
+                return `
+                    <div class="shortcut-item" onclick="window.open('${s.url}','_blank')">
+                        ${deleteBtn}
+                        <div class="shortcut-icon">${iconHtml}</div>
+                        <div class="shortcut-name">${s.name}</div>
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <div class="shortcut-item" onclick="openAddModal()">
+                    <div class="shortcut-icon add-shortcut">+</div>
+                    <div class="shortcut-name">添加快捷方式</div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        window.deleteShortcut = function(index) {
+            state.shortcuts.splice(index, 1);
+            saveState();
+            renderShortcuts();
+        };
+
+        window.openAddModal = function() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('modalName').focus();
+        };
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('modalName').value = '';
+            document.getElementById('modalUrl').value = '';
+            document.getElementById('modalIcon').value = '';
+        }
+
+        function confirmAddShortcut() {
+            const name = document.getElementById('modalName').value.trim();
+            let url = document.getElementById('modalUrl').value.trim();
+            const icon = document.getElementById('modalIcon').value.trim();
+
+            if (!name || !url) return;
+            if (!url.startsWith('http')) url = 'https://' + url;
+
+            state.shortcuts.push({ name, url, icon: icon || '' });
+            saveState();
+            renderShortcuts();
+            closeAddModal();
+        }
+
+        // ========== 设置面板 ==========
+        function openSettings() {
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('cityInput').value = state.city || '';
+            document.getElementById('defaultEngineSelect').value = state.engine;
+            document.getElementById('autoBgToggle').classList.toggle('active', state.autoBg);
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        // ========== 应用抽屉 ==========
+        function toggleAppDrawer() {
+            document.getElementById('appDrawer').classList.toggle('show');
+        }
+
+        // ========== 事件绑定 ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            initBg();
+            updateTime();
+            setInterval(updateTime, 1000);
+            fetchWeather();
+            renderShortcuts();
+            setEngine(state.engine);
+            toggleAutoBg(state.autoBg);
+
+            // 搜索
+            document.getElementById('searchBtn').addEventListener('click', doSearch);
+            document.getElementById('searchInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') doSearch();
+            });
+
+            // 搜索引擎下拉
+            document.getElementById('engineSelect').addEventListener('click', e => {
+                e.stopPropagation();
+                document.getElementById('engineDropdown').classList.toggle('show');
+            });
+
+            document.querySelectorAll('.engine-option').forEach(el => {
+                el.addEventListener('click', e => {
+                    e.stopPropagation();
+                    setEngine(el.dataset.engine);
+                    document.getElementById('engineDropdown').classList.remove('show');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.getElementById('engineDropdown').classList.remove('show');
+                document.getElementById('appDrawer').classList.remove('show');
+            });
+
+            // 设置
+            document.getElementById('settingsBtn').addEventListener('click', openSettings);
+            document.getElementById('settingsClose').addEventListener('click', closeSettings);
+            document.getElementById('overlay').addEventListener('click', () => {
+                closeSettings();
+                closeAddModal();
+            });
+
+            // 编辑模式
+            document.getElementById('editBtn').addEventListener('click', () => {
+                state.editMode = !state.editMode;
+                document.getElementById('editBtn').style.background = state.editMode 
+                    ? 'rgba(74, 158, 255, 0.5)' : '';
+                renderShortcuts();
+            });
+
+            // 应用抽屉
+            document.getElementById('appGridBtn').addEventListener('click', e => {
+                e.stopPropagation();
+                toggleAppDrawer();
+            });
+
+            // 天气刷新
+            document.getElementById('weatherWidget').addEventListener('click', fetchWeather);
+
+            // 设置项
+            document.getElementById('autoBgToggle').addEventListener('click', () => {
+                toggleAutoBg(!state.autoBg);
+            });
+
+            document.getElementById('applyCustomBg').addEventListener('click', () => {
+                const url = document.getElementById('customBgUrl').value.trim();
+                if (url) {
+                    state.customBg = url;
+                    saveState();
+                    setBg(url);
+                    renderBgOptions();
+                    document.getElementById('customBgUrl').value = '';
+                }
+            });
+
+            document.getElementById('saveCityBtn').addEventListener('click', () => {
+                const city = document.getElementById('cityInput').value.trim();
+                if (city) {
+                    state.city = city;
+                    saveState();
+                    fetchWeather();
+                }
+            });
+
+            document.getElementById('defaultEngineSelect').addEventListener('change', e => {
+                setEngine(e.target.value);
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                if (confirm('确定要重置所有设置吗？快捷方式和自定义背景将恢复默认。')) {
+                    localStorage.removeItem('startpage_state');
+                    location.reload();
+                }
+            });
+
+            // 弹窗
+            document.getElementById('modalCancel').addEventListener('click', closeAddModal);
+            document.getElementById('modalConfirm').addEventListener('click', confirmAddShortcut);
+            document.getElementById('addModal').addEventListener('keydown', e => {
+                if (e.key === 'Enter') confirmAddShortcut();
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
